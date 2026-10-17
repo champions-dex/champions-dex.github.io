@@ -205,8 +205,8 @@ const state = {
   detailData: new Map(),
   tc: {
     teams: [], updatedAt: null, source: 'loading', loaded: false, loading: false,
-    search: '', selected: [], mode: 'AND', includeUnknownItems: false,
-    regulation: 'current', format: 'all', sort: 'newest', favoritesOnly: false
+    search: '', selected: [], mode: 'AND', includeUnknownItems: false, onlyPublishedItems: true,
+    regulation: 'current', format: 'all', sort: 'fullsets', favoritesOnly: false
   },
   tcFavorites: new Set(readStoredArray('champions-tc-favorites')),
   tcWorked: readStoredObject('champions-tc-worked', {})
@@ -807,7 +807,7 @@ async function copyTeamCode(code, trigger) {
 function tcFiltered() {
   return TeamCodesLib.filterTeams(state.tc.teams, {
     search: state.tc.search, selected: state.tc.selected, mode: state.tc.mode,
-    includeUnknownItems: state.tc.includeUnknownItems, regulation: state.tc.regulation,
+    includeUnknownItems: state.tc.includeUnknownItems, onlyPublishedItems: state.tc.onlyPublishedItems, regulation: state.tc.regulation,
     format: state.tc.format, sort: state.tc.sort, favoritesOnly: state.tc.favoritesOnly,
     favorites: state.tcFavorites, currentRegulation: CHAMPIONS_REGULATIONS.active
   });
@@ -830,13 +830,15 @@ function renderTeamCodes() {
   if (modeLabel) modeLabel.textContent = state.tc.mode === 'AND' ? 'ALL selected must be on the team' : 'ANY selected Pokémon matches';
   const modeToggle = document.querySelector('#tcModeToggle');
   if (modeToggle) { modeToggle.textContent = `MODE: ${state.tc.mode}`; modeToggle.setAttribute('aria-pressed', String(state.tc.mode === 'OR')); }
-  const { visible, hiddenByUnknownItems } = tcFiltered();
-  if (els.tcResultLine) els.tcResultLine.textContent = state.tc.teams.length ? `Showing ${visible.length} of ${state.tc.teams.length} teams${hiddenByUnknownItems ? ` · ${hiddenByUnknownItems} hidden because their held items were not published` : ''}` : '';
+  const { visible, hiddenByUnknownItems, hiddenByUnpublishedItems = 0 } = tcFiltered();
+  if (els.tcResultLine) els.tcResultLine.textContent = state.tc.teams.length ? `Showing ${visible.length} of ${state.tc.teams.length} teams${state.tc.onlyPublishedItems && hiddenByUnpublishedItems ? ` · ${hiddenByUnpublishedItems} hidden — items not published` : ''}${hiddenByUnknownItems ? ` · ${hiddenByUnknownItems} hidden because their held items were not published` : ''}` : '';
   if (els.tcEmpty) {
     els.tcEmpty.hidden = visible.length > 0 || !state.tc.teams.length;
     if (!visible.length && els.tcEmptyText) els.tcEmptyText.textContent = hiddenByUnknownItems
       ? `${hiddenByUnknownItems} team${hiddenByUnknownItems === 1 ? '' : 's'} ha${hiddenByUnknownItems === 1 ? 's' : 've'} your Pokémon but the source did not publish held items, so the item filter hid ${hiddenByUnknownItems === 1 ? 'it' : 'them'}. Tick “Include teams with unknown items” to see ${hiddenByUnknownItems === 1 ? 'it' : 'them'}, or remove the item requirement.`
-      : state.tc.favoritesOnly ? 'No favourite teams match yet. Tap ♥ on any team card to save it here.' : 'No teams match these filters. Try removing a Pokémon, an item requirement, or Reset Filters.';
+      : state.tc.onlyPublishedItems && hiddenByUnpublishedItems
+        ? `${hiddenByUnpublishedItems} team${hiddenByUnpublishedItems === 1 ? '' : 's'} matched but ${hiddenByUnpublishedItems === 1 ? 'its' : 'their'} items were not published, so “Only teams with published items” hid ${hiddenByUnpublishedItems === 1 ? 'it' : 'them'}. Turn that filter off to see species-only teams, or remove another filter.`
+        : state.tc.favoritesOnly ? 'No favourite teams match yet. Tap ♥ on any team card to save it here.' : 'No teams match these filters. Try removing a Pokémon, an item requirement, or Reset Filters.';
   }
   els.tcGrid.innerHTML = visible.map(team => {
     const code = TeamCodesLib.normalizeTeamCode(team.code);
@@ -844,12 +846,12 @@ function renderTeamCodes() {
     const worked = state.tcWorked[code] || '';
     const current = team.regulation === CHAMPIONS_REGULATIONS.active;
     const dateText = TeamCodesLib.teamDate(team) || 'Date not listed';
-    const tierLabel = team.dataTier === 'A' ? 'Full sets · items known' : team.dataTier === 'B' ? 'Species only · items not published' : 'Code only';
+    const tierLabel = team.dataTier === 'A' ? `Full set: ${team.members.filter(member => member.item).length} items listed` : team.dataTier === 'B' ? 'Species only · items not published' : 'Code only';
     const canBuild = team.dataTier === 'A' && team.members.every(member => tcResolveEntry(member.species));
     return `<article class="tc-card">
       <div class="tc-card-head"><div><h3>${escapeHtml(team.title || team.creator || 'Replica team')}</h3><p>${escapeHtml(team.creator || 'Creator not listed')}${team.event ? ` · ${escapeHtml(team.event.name)}${team.event.placing ? ` · ${escapeHtml(team.event.placing)}` : ''}` : ''} · ${escapeHtml(dateText)}</p></div><button class="tc-fav ${isFav ? 'active' : ''}" type="button" data-tc-fav="${code}" aria-label="Favourite ${code}" aria-pressed="${isFav}">${isFav ? '♥' : '♡'}</button></div>
       <div class="tc-chips"><span>${escapeHtml(team.regulation || 'Regulation not listed')}</span><span>${escapeHtml(team.format ? titleCase(team.format) : 'Format not listed')}</span><span>${tierLabel}</span><span class="${current ? 'current' : 'older'}">${current ? 'Current regulation' : 'Older regulation'}</span></div>
-      <div class="tc-members">${team.members.map(member => `<div class="tc-member"><img src="${tcSpriteFor(member.species)}" alt="" loading="lazy"><b>${escapeHtml(member.species)}</b><span>${escapeHtml(member.item || 'Item not published')}</span>${member.ability ? `<em>${escapeHtml(member.ability)}</em>` : ''}</div>`).join('')}</div>
+      <div class="tc-members">${team.members.map(member => `<div class="tc-member"><img src="${tcSpriteFor(member.species)}" alt="" loading="lazy"><b>${escapeHtml(member.species)}</b><span class="${member.item ? 'tc-item-known' : 'tc-item-unknown'}">${escapeHtml(member.item || 'Item not published')}</span>${member.ability ? `<em>${escapeHtml(member.ability)}</em>` : ''}</div>`).join('')}</div>
       <div class="tc-code-row"><button class="tc-code" type="button" data-tc-copy="${code}" title="Tap to copy" aria-label="Copy Replica Team code ${TeamCodesLib.formatTeamCode(code)}"><span>${TeamCodesLib.formatTeamCode(code)}</span><small>TAP CODE TO COPY</small></button><button class="tc-copy-btn" type="button" data-tc-copy="${code}">COPY CODE</button></div>
       <div class="tc-actions"><button type="button" data-tc-worked="worked" data-code="${code}" class="${worked === 'worked' ? 'active worked' : ''}">✓ Worked for me</button><button type="button" data-tc-worked="failed" data-code="${code}" class="${worked === 'failed' ? 'active failed' : ''}">✗ Didn’t work</button>${canBuild ? `<button type="button" data-tc-build="${code}">OPEN IN TEAM BUILDER</button>` : `<button type="button" disabled title="Open in Team Builder needs published items and moves (Tier A full sets)">BUILDER NEEDS FULL SETS</button>`}</div>
       <p class="tc-source">Listed ${escapeHtml(dateText)} · Source: ${team.source?.url ? `<a href="${escapeHtml(team.source.url)}" target="_blank" rel="noreferrer">${escapeHtml(team.source.name || 'Source')} ↗</a>` : escapeHtml(team.source?.name || 'Source not listed')} · Status is confirmed only inside Pokémon Champions.</p>
@@ -2371,7 +2373,7 @@ async function renderMoveExplorer(query = state.moveExplorerQuery) {
 function renderDataCenter() {
   const counts = dataQualityCounts();
   if (els.dataHealth) els.dataHealth.innerHTML = `<article><b>${counts.specialist}</b><span>Complete move records</span><em>Champions move effects and technical fields bundled offline</em></article><article><b>${Object.keys(CHAMPIONS_REFERENCE_ABILITY_META || {}).length}</b><span>Complete Ability records</span><em>Every roster and Mega Ability has an effect description</em></article><article><b>${counts.unavailable}</b><span>Validation issues</span><em>${counts.issues.map(issue => escapeHtml(issue.message)).join(' · ') || 'No source-link conflicts detected'}</em></article><article><b>${state.watchlist.size}</b><span>Saved local entries</span><em>Watchlist, notes, and team draft stay on-device</em></article>`;
-  if (els.dataChangelog) els.dataChangelog.innerHTML = `<div class="changelog-entry"><b>v1.4.0</b><span>Added the live Team Codes section: Replica Team codes fetched from the public data feed with a bundled offline snapshot, Pokémon + held-item (Mega Stone) filtering, tap-to-copy codes, favourites, worked-for-me feedback, and Open in Team Builder for full sets. Added in-app update awareness against the public version manifest.</span></div><div class="changelog-entry"><b>v1.3.0</b><span>Nova arena UI revamp: aurora glass design, type-glowing cards, roster sorting, recently viewed Pokémon, a visual damage HP bar, copyable comparison summaries, and keyboard-shortcut help.</span></div><div class="changelog-entry"><b>v1.2.15</b><span>Added a searchable Ability Explorer and replaced blank, vague, or placeholder move and Ability text with complete offline technical records. Details now flow through Pokémon pages, comparisons, Move Explorer, universal search, and the damage calculator.</span></div><div class="changelog-entry"><b>v1.2.14</b><span>Search now resets reliably between primary tabs; browser Back restores views and detail sheets; mobile navigation, compare prompts, move lookup, heatmap recovery, focus handling, and update reporting are hardened.</span></div><div class="changelog-entry"><b>v1.2.13</b><span>Rebuilt page, sidebar, detail-sheet, knowledge-sheet, comparison-tray, and mobile navigation scrolling with preserved positions and no overlay-obscured content.</span></div><div class="changelog-entry"><b>v1.2.0</b><span>Regulation M-C roster, six new Megas, battle-relevant alternate forms, version 1.2.0 move/Ability/item updates, professional comparison tray, accessibility fixes, and dedicated local artwork for all ${roster.length + megaRoster.length} entries.</span></div><div class="changelog-entry"><b>Offline</b><span>The app and APK bundle ${state.moveCatalog.size} complete move records and ${Object.keys(CHAMPIONS_REFERENCE_ABILITY_META || {}).length} complete Ability records.</span></div>`;
+  if (els.dataChangelog) els.dataChangelog.innerHTML = `<div class="changelog-entry"><b>v1.4.1</b><span>Team Codes now opens on full sets with published items first, with an “Only teams with published items” filter on by default, so species-only teams no longer greet you with “Item not published”.</span></div><div class="changelog-entry"><b>v1.4.0</b><span>Added the live Team Codes section: Replica Team codes fetched from the public data feed with a bundled offline snapshot, Pokémon + held-item (Mega Stone) filtering, tap-to-copy codes, favourites, worked-for-me feedback, and Open in Team Builder for full sets. Added in-app update awareness against the public version manifest.</span></div><div class="changelog-entry"><b>v1.3.0</b><span>Nova arena UI revamp: aurora glass design, type-glowing cards, roster sorting, recently viewed Pokémon, a visual damage HP bar, copyable comparison summaries, and keyboard-shortcut help.</span></div><div class="changelog-entry"><b>v1.2.15</b><span>Added a searchable Ability Explorer and replaced blank, vague, or placeholder move and Ability text with complete offline technical records. Details now flow through Pokémon pages, comparisons, Move Explorer, universal search, and the damage calculator.</span></div><div class="changelog-entry"><b>v1.2.14</b><span>Search now resets reliably between primary tabs; browser Back restores views and detail sheets; mobile navigation, compare prompts, move lookup, heatmap recovery, focus handling, and update reporting are hardened.</span></div><div class="changelog-entry"><b>v1.2.13</b><span>Rebuilt page, sidebar, detail-sheet, knowledge-sheet, comparison-tray, and mobile navigation scrolling with preserved positions and no overlay-obscured content.</span></div><div class="changelog-entry"><b>v1.2.0</b><span>Regulation M-C roster, six new Megas, battle-relevant alternate forms, version 1.2.0 move/Ability/item updates, professional comparison tray, accessibility fixes, and dedicated local artwork for all ${roster.length + megaRoster.length} entries.</span></div><div class="changelog-entry"><b>Offline</b><span>The app and APK bundle ${state.moveCatalog.size} complete move records and ${Object.keys(CHAMPIONS_REFERENCE_ABILITY_META || {}).length} complete Ability records.</span></div>`;
 }
 
 function setView(view, options = {}) {
@@ -2634,13 +2636,15 @@ document.querySelector('#tcFormatSelect')?.addEventListener('change', event => {
 document.querySelector('#tcSortSelect')?.addEventListener('change', event => { state.tc.sort = event.target.value; renderTeamCodes(); });
 document.querySelector('#tcFavOnly')?.addEventListener('change', event => { state.tc.favoritesOnly = event.target.checked; renderTeamCodes(); });
 document.querySelector('#tcIncludeUnknown')?.addEventListener('change', event => { state.tc.includeUnknownItems = event.target.checked; renderTeamCodes(); });
+document.querySelector('#tcOnlyPublished')?.addEventListener('change', event => { state.tc.onlyPublishedItems = event.target.checked; renderTeamCodes(); });
 document.querySelector('#teamCodesRefresh')?.addEventListener('click', () => { state.tc.loaded = false; loadTeamCodes(true); });
 function tcReset() {
   state.tc.search = ''; state.tc.selected = []; state.tc.mode = 'AND'; state.tc.includeUnknownItems = false;
-  state.tc.regulation = 'current'; state.tc.format = 'all'; state.tc.sort = 'newest'; state.tc.favoritesOnly = false;
+  state.tc.regulation = 'current'; state.tc.format = 'all'; state.tc.sort = 'fullsets'; state.tc.favoritesOnly = false; state.tc.onlyPublishedItems = true;
   if (els.tcSearch) els.tcSearch.value = '';
   const set = (id, value) => { const el = document.querySelector(id); if (el) el.value = value; };
-  set('#tcRegulationSelect', 'current'); set('#tcFormatSelect', 'all'); set('#tcSortSelect', 'newest');
+  set('#tcRegulationSelect', 'current'); set('#tcFormatSelect', 'all'); set('#tcSortSelect', 'fullsets');
+  const onlyPub = document.querySelector('#tcOnlyPublished'); if (onlyPub) onlyPub.checked = true;
   const fav = document.querySelector('#tcFavOnly'); if (fav) fav.checked = false;
   const unk = document.querySelector('#tcIncludeUnknown'); if (unk) unk.checked = false;
   renderTeamCodes();

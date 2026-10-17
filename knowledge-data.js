@@ -1,6 +1,6 @@
 // Champions Dex tournament knowledge layer.
 // Numeric records are never promoted above the verification status shown here.
-const CHAMPIONS_APP_VERSION = '1.4.0';
+const CHAMPIONS_APP_VERSION = '1.4.1';
 
 const CHAMPIONS_DATA_STATUSES = Object.freeze({
   official: { label: 'Officially confirmed', className: 'official', rank: 6 },

@@ -28,6 +28,12 @@ const TeamCodesLib = (() => {
 
   const itemKey = value => slugify(value);
 
+  // Full set = Tier A with a published held item for every member (see validateDataset).
+  function isFullSetTeam(team) {
+    return Boolean(team && team.dataTier === 'A' && Array.isArray(team.members) && team.members.length > 0
+      && team.members.every(member => member && member.item));
+  }
+
   function memberForSelection(team, selection) {
     const wanted = speciesKey(selection && selection.species);
     if (!wanted) return null;
@@ -55,6 +61,7 @@ const TeamCodesLib = (() => {
     const search = String(options.search || '').trim().toLowerCase();
     const favorites = options.favorites instanceof Set ? options.favorites : new Set(options.favorites || []);
     let hiddenByUnknownItems = 0;
+    let hiddenByUnpublishedItems = 0;
 
     const visible = (Array.isArray(teams) ? teams : []).filter(team => {
       if (!team || !isValidTeamCode(team.code)) return false;
@@ -69,6 +76,9 @@ const TeamCodesLib = (() => {
           ...(team.members || []).flatMap(member => [member.species, member.item, member.ability])].filter(Boolean).join(' ').toLowerCase();
         if (!haystack.includes(search)) return false;
       }
+      // Only-published gate runs before the item-constraint check so a Tier B/C team is
+      // counted once here and never double-counted in hiddenByUnknownItems below.
+      if (options.onlyPublishedItems && !isFullSetTeam(team)) { hiddenByUnpublishedItems += 1; return false; }
       if (!selections.length) return true;
       const states = selections.map(selection => selectionState(team, selection));
       if (mode === 'OR') {
@@ -88,13 +98,18 @@ const TeamCodesLib = (() => {
       return false;
     });
 
-    const sort = options.sort || 'newest';
+    const sort = options.sort || 'fullsets';
     const sorted = [...visible].sort((a, b) => {
+      if (sort === 'fullsets') {
+        const tierOrder = Number(isFullSetTeam(b)) - Number(isFullSetTeam(a));
+        if (tierOrder) return tierOrder;
+        return teamDate(b).localeCompare(teamDate(a));
+      }
       if (sort === 'oldest') return teamDate(a).localeCompare(teamDate(b));
       if (sort === 'creator') return String(a.creator || a.title || '').localeCompare(String(b.creator || b.title || ''));
       return teamDate(b).localeCompare(teamDate(a));
     });
-    return { visible: sorted, hiddenByUnknownItems };
+    return { visible: sorted, hiddenByUnknownItems, hiddenByUnpublishedItems };
   }
 
   function validateDataset(payload) {
@@ -114,7 +129,7 @@ const TeamCodesLib = (() => {
     return { valid: issues.length === 0, issues };
   }
 
-  return Object.freeze({ normalizeTeamCode, isValidTeamCode, formatTeamCode, slugify, speciesKey, itemKey, memberForSelection, selectionState, filterTeams, validateDataset, teamDate });
+  return Object.freeze({ normalizeTeamCode, isValidTeamCode, formatTeamCode, slugify, speciesKey, itemKey, memberForSelection, selectionState, filterTeams, validateDataset, teamDate, isFullSetTeam });
 })();
 
 if (typeof module === 'object' && module.exports) module.exports = TeamCodesLib;

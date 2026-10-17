@@ -1,6 +1,6 @@
 importScripts('./artwork-data.js');
 
-const VERSION = 'champions-dex-pwa-v19';
+const VERSION = 'champions-dex-pwa-v20';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 const CORE_SHELL = [
