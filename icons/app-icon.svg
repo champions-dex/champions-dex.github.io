@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Champions Dex app icon">
+  <rect width="1024" height="1024" rx="230" fill="#07131f"/>
+  <path d="M158 302V158h144M722 158h144v144M866 722v144H722M302 866H158V722" fill="none" stroke="#203f52" stroke-width="34" stroke-linecap="square"/>
+  <circle cx="512" cy="512" r="270" fill="#0b2130" stroke="#42d9e8" stroke-width="34"/>
+  <path d="M735 512a223 223 0 1 1-64-157" fill="none" stroke="#dff9fb" stroke-width="86" stroke-linecap="square"/>
+  <path d="M690 252h92v92" fill="none" stroke="#f3d34a" stroke-width="42"/>
+  <path d="M288 512h448" stroke="#42d9e8" stroke-width="22"/>
+  <circle cx="512" cy="512" r="72" fill="#07131f" stroke="#f3d34a" stroke-width="26"/>
+  <circle cx="512" cy="512" r="22" fill="#42d9e8"/>
+</svg>

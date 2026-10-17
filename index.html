@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#38bdf8" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: https://raw.githubusercontent.com; connect-src 'self' https://pokeapi.co https://raw.githubusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Champions Dex" />
+    <meta name="description" content="A focused Pokédex for Pokémon Champions rosters, stats, moves, abilities, and Mega Evolutions." />
+    <title>Champions Dex</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://raw.githubusercontent.com" />
+    <link rel="preconnect" href="https://pokeapi.co" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-notice" id="appNotice" role="status" aria-live="polite" hidden></div>
+    <div class="update-banner" id="updateBanner" hidden role="status">
+      <span id="updateBannerText">Update available</span>
+      <a id="updateBannerLink" href="https://github.com/ikki0304/champions-dex/releases" target="_blank" rel="noreferrer">VIEW RELEASE ↗</a>
+      <button id="updateBannerDismiss" type="button" aria-label="Dismiss update notice">×</button>
+    </div>
+    <div class="app-shell">
+      <aside class="sidebar" id="primaryNavigation" aria-label="Primary navigation">
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="Close navigation">×</button>
+        <button class="brand" id="brandHome" type="button" aria-label="Champions Dex home">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <span><b>CHAMPIONS</b><small>DEX // 2026</small></span>
+        </button>
+
+        <nav class="nav-list">
+          <button class="nav-item active" data-view="roster" type="button" aria-current="page">
+            <span class="nav-icon">⌁</span><span>Roster</span><em id="rosterCount">262</em>
+          </button>
+          <button class="nav-item" data-view="mechanics" type="button">
+            <span class="nav-icon">◈</span><span>Battle Guide</span><em id="mechanicsCount">61</em>
+          </button>
+          <button class="nav-item" data-view="heatmap" type="button">
+            <span class="nav-icon">▦</span><span>Stat Heatmap</span><em id="heatmapCount">343</em>
+          </button>
+          <button class="nav-item" data-view="team" type="button">
+            <span class="nav-icon">◫</span><span>Team Builder</span><em id="teamCount">0/6</em>
+          </button>
+          <button class="nav-item" data-view="teamcodes" type="button">
+            <span class="nav-icon">▣</span><span>Team Codes</span><em id="teamCodeCount">LIVE</em>
+          </button>
+          <button class="nav-item" data-view="moves" type="button">
+            <span class="nav-icon">↗</span><span>Move Explorer</span><em id="moveCount">—</em>
+          </button>
+          <button class="nav-item" data-view="abilities" type="button">
+            <span class="nav-icon">✦</span><span>Ability Explorer</span><em id="abilityCount">—</em>
+          </button>
+          <button class="nav-item" data-view="items" type="button">
+            <span class="nav-icon">◆</span><span>Item Dex</span><em id="itemCount">—</em>
+          </button>
+          <button class="nav-item" data-view="glossary" type="button">
+            <span class="nav-icon">?</span><span>Glossary</span><em id="termCount">—</em>
+          </button>
+          <button class="nav-item" data-view="intel" type="button">
+            <span class="nav-icon">⌁</span><span>Tournament Intel</span><em>M–C</em>
+          </button>
+          <button class="nav-item" data-view="data" type="button">
+            <span class="nav-icon">◌</span><span>Data Center</span><em id="dataCount">LIVE</em>
+          </button>
+          <button class="nav-item" data-view="watchlist" type="button">
+            <span class="nav-icon">◇</span><span>Watchlist</span><em id="watchCount">0</em>
+          </button>
+          <button class="nav-item" data-view="compare" type="button">
+            <span class="nav-icon">⇄</span><span>Compare</span><em id="compareCount">0/2</em>
+          </button>
+        </nav>
+
+        <div class="season-card">
+          <span class="eyebrow">LIVE REGULATION</span>
+          <strong>M–C</strong>
+          <p>9 Sep — 2 Dec</p>
+          <span class="season-status"><i></i> Active now</span>
+        </div>
+
+        <div class="sidebar-foot">
+          <span>DATA LINK</span>
+          <b id="dataStatus"><i></i> <span id="dataStatusText">Offline core ready</span></b>
+          <small>Sources last checked: 12 Sep 2026</small>
+          <button class="sidebar-update" id="updateButton" type="button">CHECK FOR UPDATES</button>
+          <small>App version <b id="appVersion">1.4.0</b></small>
+        </div>
+      </aside>
+      <button class="mobile-drawer-scrim" id="mobileDrawerScrim" type="button" aria-label="Close navigation" hidden></button>
+
+      <main class="main-content" id="mainContent" tabindex="-1">
+        <header class="topbar">
+          <button class="mobile-menu" type="button" aria-label="Open navigation" aria-controls="primaryNavigation" aria-expanded="false">☰</button>
+          <label class="global-search">
+            <span class="sr-only">Search the Champions Dex</span>
+            <span aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" placeholder="Search Pokémon, moves, Abilities, items, or mechanics…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="globalSearchResults" aria-expanded="false" />
+            <kbd>/</kbd>
+          </label>
+          <div class="global-search-results" id="globalSearchResults" hidden role="listbox" aria-label="Universal search results"></div>
+          <div class="top-actions">
+            <button class="install-button" id="installButton" type="button" hidden aria-label="Install Champions Dex app">
+              <span aria-hidden="true">⇩</span><b>INSTALL APP</b>
+            </button>
+            <span class="sync-state"><i></i><span>BUNDLED DATA</span></span>
+            <button class="icon-button" id="shortcutHelpButton" type="button" aria-label="Show keyboard shortcuts" aria-haspopup="dialog" aria-expanded="false">?</button>
+            <button class="icon-button" id="randomButton" type="button" aria-label="Open a random Pokémon">↻</button>
+          </div>
+        </header>
+
+        <section class="content-wrap">
+          <div class="hero-row">
+            <div>
+              <span class="eyebrow" id="viewEyebrow">REGULATION M–C DATABASE</span>
+              <h1 id="viewTitle">Build your champion team.</h1>
+              <p id="viewDescription">Explore every currently eligible Pokémon; Mega Evolutions are attached directly to each compatible final-form entry.</p>
+            </div>
+            <div class="hero-metrics" aria-label="Roster summary">
+              <div><b id="metricRoster">262</b><span id="metricRosterLabel">eligible forms</span></div>
+              <div><b id="metricMega">76</b><span id="metricMegaLabel">mega-capable</span></div>
+              <div><b id="metricThird">6</b><span id="metricThirdLabel">core stats</span></div>
+            </div>
+          </div>
+
+          <div class="update-strip" id="updateStrip">
+            <span class="update-badge">DATASET</span>
+            <p><b>Regulation M–C updated:</b> 262 normal and alternate-form entries plus 81 Mega forms, all with locally bundled form-specific artwork.</p>
+            <a href="https://www.serebii.net/pokemonchampions/pokemon.shtml" target="_blank" rel="noreferrer">Roster reference ↗</a>
+          </div>
+
+          <div class="toolbar" id="toolbar">
+            <div class="filter-tabs" role="group" aria-label="Roster filters">
+              <button class="filter-tab active" data-filter="all" type="button" aria-pressed="true">All</button>
+              <button class="filter-tab" data-filter="mega" type="button" aria-pressed="false">Mega-capable</button>
+              <button class="filter-tab" data-filter="new" type="button" aria-pressed="false">M–C additions</button>
+            </div>
+            <label class="type-filter">
+              <span>TYPE</span>
+              <select id="typeSelect">
+                <option value="all">All types</option>
+              </select>
+            </label>
+            <label class="search-mode-filter">
+              <span>SEARCH MODE</span>
+              <select id="searchMode">
+                <option value="name-ability">Pokémon / Ability</option>
+                <option value="move">Move compatibility</option>
+              </select>
+            </label>
+            <label class="sort-filter">
+              <span>SORT</span>
+              <select id="sortSelect" aria-label="Sort roster">
+                <option value="dex">Dex number</option>
+                <option value="name">Name A–Z</option>
+                <option value="type">Primary type</option>
+                <option value="mega">Mega-capable first</option>
+              </select>
+            </label>
+            <button class="clear-filters" id="clearFiltersButton" type="button">CLEAR FILTERS</button>
+          </div>
+
+          <div class="move-search-tools" id="moveSearchTools" hidden>
+            <div>
+              <span class="eyebrow">CHAMPIONS MOVE SEARCH</span>
+              <p>Results use the current app move dataset. Any list without an explicit Champions learnset is marked as an unverified reference.</p>
+            </div>
+            <label><span>MOVE TYPE</span><select id="moveTypeSelect"><option value="all">All types</option></select></label>
+            <label><span>CATEGORY</span><select id="moveCategorySelect"><option value="all">All categories</option><option value="physical">Physical</option><option value="special">Special</option><option value="status">Status</option></select></label>
+            <label><span>POWER</span><select id="movePowerSelect"><option value="all">Any power</option><option value="damage">Damaging only</option><option value="status">Status / no power</option></select></label>
+            <label><span>ACCURACY</span><select id="moveAccuracySelect"><option value="all">Any accuracy</option><option value="reliable">90%+</option><option value="unreliable">Below 90%</option><option value="always">Always hits / N/A</option></select></label>
+          </div>
+          <datalist id="moveOptions"></datalist>
+
+          <section class="recent-strip" id="recentStrip" hidden aria-label="Recently viewed Pokémon">
+            <div class="recent-head"><span class="eyebrow">RECENTLY VIEWED</span><button id="clearRecentButton" type="button">CLEAR</button></div>
+            <div class="recent-chips" id="recentChips"></div>
+          </section>
+          <section class="pokemon-grid" id="pokemonGrid" aria-live="polite"></section>
+          <div class="grid-footer" id="gridFooter">
+            <span id="resultCount">Showing 48 of 262</span>
+            <button id="loadMoreButton" type="button">Load 48 more ↓</button>
+          </div>
+
+          <section class="empty-state" id="emptyState" hidden>
+            <span>404</span>
+            <h2>No Pokémon found</h2>
+            <p>Try another name, type, or roster filter.</p>
+          </section>
+
+          <section class="compare-view" id="compareView" hidden>
+            <div class="compare-empty" id="compareEmpty">
+              <span>⇄</span>
+              <h2>Pick two contenders</h2>
+              <p>Open any Pokémon and choose “Compare” to line up default Champions stats and calculate move damage.</p>
+            </div>
+            <div class="compare-board" id="compareBoard"></div>
+          </section>
+
+          <section class="mechanics-view" id="mechanicsView" hidden>
+            <div class="mechanics-callout">
+              <span>REGULATION M–C REFERENCE</span>
+              <p>Champions-specific changes are flagged. Standard effects are included only where they are active in the current battle system.</p>
+            </div>
+            <div class="mechanics-filters" id="mechanicsFilters" role="group" aria-label="Mechanics categories"></div>
+            <div class="mechanics-result-line"><span id="mechanicsResultCount"></span><button id="expandMechanics" type="button">Expand all</button></div>
+            <div class="mechanics-grid" id="mechanicsGrid"></div>
+            <div class="mechanics-sources">
+              <b>DATA NOTES</b>
+              <p>Current Champions rules verified against the official M–C record and 10 September specialist references. Effects can change with future updates.</p>
+              <div><a href="https://champions.pokemon.com/en-us/gameplay" target="_blank" rel="noreferrer">Official gameplay ↗</a><a href="https://www.pokemon.com/us/news/get-ready-for-regulation-set-m-c-in-pokemon-champions" target="_blank" rel="noreferrer">Official M–C update ↗</a></div>
+            </div>
+          </section>
+
+          <section class="heatmap-view" id="heatmapView" hidden>
+            <div class="heatmap-callout">
+              <span>ROSTER STAT MAP</span>
+              <p>Every available normal entry and Mega form is placed using its default Level 50 Champions value with 0 Stat Points and neutral Alignment.</p>
+            </div>
+            <div class="heatmap-controls">
+              <label><span>STAT</span><select id="heatmapStatSelect"><option value="hp">HP</option><option value="attack">Attack</option><option value="defense">Defense</option><option value="special-attack">Special Attack</option><option value="special-defense">Special Defense</option><option value="speed">Speed</option><option value="bst">Default Champions Stat Total</option></select></label>
+              <label><span>TYPE</span><select id="heatmapTypeSelect"><option value="all">All types</option></select></label>
+              <label><span>FORM</span><select id="heatmapMegaSelect"><option value="all">Normal + Mega</option><option value="normal">Normal only</option><option value="mega">Mega only</option></select></label>
+              <label><span>ABILITY</span><input id="heatmapAbilityInput" type="search" placeholder="Filter by Ability"></label>
+              <label><span>MOVE COMPATIBILITY</span><input id="heatmapMoveInput" type="search" placeholder="Optional move"></label>
+              <label><span>MIN</span><input id="heatmapMinInput" type="number" inputmode="numeric" placeholder="Any" min="0" max="999"></label>
+              <label><span>MAX</span><input id="heatmapMaxInput" type="number" inputmode="numeric" placeholder="Any" min="0" max="999"></label>
+            </div>
+            <div class="heatmap-meta"><span id="heatmapStatus">Preparing stat data…</span><span class="heatmap-legend"><i></i> lower <b></b> higher</span></div>
+            <div class="heatmap-actions"><button id="heatmapSortButton" type="button">SORT: HIGH → LOW</button><button id="heatmapTopButton" type="button">SHOW TOP 10</button><button id="heatmapCompactButton" type="button">COMPACT VIEW</button><button id="heatmapFullscreenButton" type="button">FULL SCREEN</button><button id="heatmapExportButton" type="button">EXPORT SVG</button></div>
+            <div class="heatmap-grid" id="heatmapGrid" aria-live="polite"></div>
+          </section>
+
+          <section class="team-view" id="teamView" hidden>
+            <div class="workspace-callout"><span>TEAM WORKSPACE</span><p>Build a six-slot roster with Mega forms, save your draft locally, and export it for backup. Type warnings use a standard-chart reference until Champions-specific matchup data is confirmed.</p></div>
+            <div class="team-toolbar"><label><span>TEAM NAME</span><input id="teamNameInput" type="text" maxlength="40" placeholder="Untitled Champions team"></label><label><span>FORMAT</span><select id="teamFormatSelect"><option value="doubles">M–C Doubles · select 4</option><option value="singles">M–C Singles · select 3</option></select></label><button id="teamExportButton" type="button">EXPORT TEAM</button><button id="teamImportButton" type="button">IMPORT TEAM</button><input id="teamImportInput" type="file" accept="application/json" hidden></div>
+            <div class="team-layout"><div><div class="section-heading"><h3>Selected partners</h3><span id="teamSlotCount">0/6</span></div><div class="team-slots" id="teamSlots"></div><div class="team-summary" id="teamSummary"></div></div><div><div class="section-heading"><h3>Add Pokémon</h3><span>tap to add</span></div><input class="workspace-search" id="teamSearchInput" type="search" aria-label="Search Pokémon to add to the team" placeholder="Search roster or Mega form…"><div class="team-picker" id="teamPicker"></div></div></div>
+          </section>
+
+          <section class="team-codes-view" id="teamCodesView" hidden>
+            <div class="workspace-callout tc-callout"><span>REPLICA TEAM CODES · LIVE LIST</span><p id="teamCodesStatus">Loading team codes…</p><button id="teamCodesRefresh" type="button">↻ REFRESH</button></div>
+            <p class="tc-help">In Pokémon Champions: <b>Training → Replica Teams → Build Teams Using Team IDs</b>. A code copies species, moves, Abilities, Stat Points &amp; held items onto Pokémon you already own — you still need to own each Pokémon (and its Mega Stone where listed). Code status can only be confirmed inside the game, so this list never claims a code is verified active.</p>
+            <div class="tc-filters">
+              <label class="tc-search"><span>SEARCH TEAMS</span><input id="tcSearchInput" type="search" placeholder="Search title, creator, event, code, Pokémon, item…"></label>
+              <label><span>REGULATION</span><select id="tcRegulationSelect"><option value="current">Current (M–C)</option><option value="all">All regulations</option><option value="M-C">M–C only</option></select></label>
+              <label><span>FORMAT</span><select id="tcFormatSelect"><option value="all">All formats</option><option value="doubles">Doubles</option><option value="singles">Singles</option></select></label>
+              <label><span>SORT</span><select id="tcSortSelect"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="creator">Creator A–Z</option></select></label>
+              <label class="tc-check"><input id="tcFavOnly" type="checkbox"><span>Favourites only ♥</span></label>
+              <label class="tc-check"><input id="tcIncludeUnknown" type="checkbox"><span>Include teams with unknown items</span></label>
+              <button id="tcResetFilters" type="button">RESET FILTERS</button>
+            </div>
+            <div class="tc-picker">
+              <div class="section-heading"><h3>Filter by Pokémon</h3><span id="tcModeLabel">ALL selected must be on the team</span></div>
+              <div class="tc-picker-row"><input id="tcPokemonInput" list="tcPokemonOptions" type="search" placeholder="Add a Pokémon — e.g. Garchomp"><datalist id="tcPokemonOptions"></datalist><button id="tcAddPokemon" type="button">ADD POKÉMON</button><button id="tcModeToggle" type="button" aria-pressed="false">MODE: AND</button></div>
+              <div class="tc-selected" id="tcSelected"></div>
+              <p class="tc-picker-hint">Tip: after adding a Pokémon, pick its held item to require it exactly — for example <b>Garchomp + Garchompite Z</b>. That Pokémon’s Mega Stones are listed first. Teams whose items were not published are hidden while an item filter is on, unless you tick “Include teams with unknown items”.</p>
+            </div>
+            <p class="tc-result-line" id="tcResultLine" aria-live="polite"></p>
+            <div class="tc-grid" id="tcGrid" aria-live="polite"></div>
+            <div class="workspace-empty" id="tcEmpty" hidden><b>No teams match</b><p id="tcEmptyText">Try removing a filter.</p><button class="empty-action" id="tcEmptyReset" type="button">RESET FILTERS</button></div>
+          </section>
+
+          <section class="move-explorer-view" id="moveExplorerView" hidden>
+            <div class="workspace-callout"><span>MOVE EXPLORER</span><p>Search the current Champions available-move index and inspect compatible roster entries. Move availability and per-Pokémon compatibility carry separate verification labels.</p></div>
+            <div class="explorer-toolbar"><input id="moveExplorerInput" list="moveOptions" type="search" aria-label="Search the move explorer" placeholder="Search Protect, Thunderbolt, Psycho Cut…"><button id="moveExplorerButton" type="button">SEARCH MOVE</button></div>
+            <div class="move-explorer-result" id="moveExplorerResult"><div class="workspace-empty"><b>Choose a move</b><p>Search by name or partial name to open its details.</p></div></div>
+          </section>
+
+          <section class="ability-explorer-view" id="abilityExplorerView" hidden>
+            <div class="workspace-callout"><span>ABILITY EXPLORER</span><p>Every Ability used by the current roster and its Mega Evolutions is bundled with a complete effect description. Champions-specific overrides always take priority over standard reference text.</p></div>
+            <div class="explorer-toolbar"><input id="abilityExplorerInput" type="search" aria-label="Search the Ability Explorer" placeholder="Search Intimidate, Levitate, Tough Claws…"></div>
+            <div class="section-heading"><h3>Roster Ability records</h3><span id="abilityExplorerCount"></span></div>
+            <div class="ability-explorer-grid" id="abilityExplorerGrid" aria-live="polite"></div>
+          </section>
+
+          <section class="item-explorer-view" id="itemExplorerView" hidden>
+            <div class="workspace-callout"><span>CHAMPIONS ITEM DEX</span><p>Browse held items with exact multipliers, activation conditions, consumption rules, calculator coverage, regulation status, and field-level sources.</p></div>
+            <div class="explorer-toolbar"><input id="itemExplorerInput" type="search" aria-label="Search the Item Dex" placeholder="Search Life Orb, Light Clay, weather rocks…"><select id="itemCategorySelect" aria-label="Item category"><option value="all">All categories</option></select></div>
+            <div class="item-grid" id="itemExplorerGrid" aria-live="polite"></div>
+          </section>
+
+          <section class="glossary-view" id="glossaryView" hidden>
+            <div class="workspace-callout"><span>CONTEXTUAL BATTLE GLOSSARY</span><p>Every definition is the same record used by Pokémon pages, Ability cards, Battle Guide entries, Compare controls, and the Damage Calculator.</p></div>
+            <div class="explorer-toolbar"><input id="glossaryInput" type="search" aria-label="Search the battle glossary" placeholder="Search grounded, stat stages, Light Screen…"><select id="glossaryCategorySelect" aria-label="Glossary category"><option value="all">All categories</option></select></div>
+            <div class="glossary-grid" id="glossaryGrid" aria-live="polite"></div>
+          </section>
+
+          <section class="intel-view" id="intelView" hidden>
+            <div class="workspace-callout"><span>REGULATION-AWARE TOURNAMENT INTEL</span><p>Dated, sourced format rules and competitive notes. No build is described as popular or standard without a dated source.</p></div>
+            <div id="intelContent"></div>
+          </section>
+
+          <section class="data-center-view" id="dataCenterView" hidden>
+            <div class="workspace-callout"><span>DATA QUALITY CENTER</span><p>Every record carries provenance. Champions-confirmed data is separated from generic reference data, inference, and unavailable fields.</p></div>
+            <div class="data-health-grid" id="dataHealthGrid"></div>
+            <div class="data-center-columns"><article class="data-center-card"><h3>Update log</h3><div id="dataChangelog"></div></article><article class="data-center-card"><h3>Report missing data</h3><textarea id="dataReportInput" rows="5" aria-label="Describe missing or incorrect data" placeholder="Describe the Pokémon, move, ability, or mechanic that needs correction…"></textarea><button id="copyReportButton" type="button">COPY REPORT</button><p id="reportStatus" class="data-note"></p></article></div>
+            <div class="data-center-card data-sources"><h3>Sources and status</h3><p><b>Champions-confirmed:</b> explicit app overrides and verified mechanics.</p><p><b>Unverified reference:</b> PokéAPI or standard-chart values shown only as a research aid.</p><p><b>Unavailable:</b> no numeric or learnset value is placed without a source.</p><p><b>Artwork:</b> every displayed form is bundled locally and every Mega uses its own verified image.</p><p id="appUpdateStatus">Checking for app updates…</p><a href="https://github.com/ikki0304/champions-dex/releases" target="_blank" rel="noreferrer">Open latest APK Release ↗</a><button id="resetLocalDataButton" type="button">RESET SAVED TEAMS, NOTES & WATCHLIST</button></div>
+          </section>
+        </section>
+      </main>
+
+      <aside class="detail-panel" id="detailPanel" role="dialog" aria-modal="true" aria-label="Pokémon details" aria-hidden="true" tabindex="-1">
+        <div class="detail-topbar">
+          <span class="eyebrow">POKÉMON FILE</span>
+          <button class="close-detail" id="closeDetail" type="button" aria-label="Close details">×</button>
+        </div>
+        <div id="detailContent"></div>
+      </aside>
+      <button class="panel-scrim" id="panelScrim" type="button" aria-label="Close details" hidden></button>
+
+      <aside class="knowledge-sheet" id="knowledgeSheet" role="dialog" aria-modal="true" aria-label="Battle terminology" aria-hidden="true" tabindex="-1">
+        <div class="knowledge-sheet-handle" aria-hidden="true"></div>
+        <div class="knowledge-sheet-top"><span class="eyebrow" id="knowledgeKind">BATTLE TERM</span><button id="closeKnowledge" type="button" aria-label="Close terminology">×</button></div>
+        <div id="knowledgeContent"></div>
+      </aside>
+      <button class="knowledge-scrim" id="knowledgeScrim" type="button" aria-label="Close terminology" hidden></button>
+
+      <aside class="compare-tray" id="compareTray" aria-label="Comparison selection" aria-live="polite" hidden>
+        <div><span class="eyebrow">COMPARE TRAY</span><b id="compareTrayTitle">Choose two Pokémon</b></div>
+        <div class="compare-tray-slots" id="compareTraySlots"></div>
+        <button id="compareTrayAdd" type="button">CHOOSE POKÉMON</button>
+        <button id="compareTrayOpen" type="button" disabled>COMPARE NOW</button>
+      </aside>
+
+      <section class="shortcut-help" id="shortcutHelp" hidden role="dialog" aria-labelledby="shortcutHelpTitle">
+        <div class="shortcut-help-head"><h2 id="shortcutHelpTitle">Keyboard shortcuts</h2><button id="closeShortcutHelp" type="button" aria-label="Close keyboard shortcuts">×</button></div>
+        <dl>
+          <div><dt><kbd>/</kbd></dt><dd>Focus global search</dd></div>
+          <div><dt><kbd>?</kbd></dt><dd>Open or close this help</dd></div>
+          <div><dt><kbd>Esc</kbd></dt><dd>Close search results, sheets, details, or menu</dd></div>
+          <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Move through global search results</dd></div>
+          <div><dt><kbd>Enter</kbd></dt><dd>Open the highlighted search result</dd></div>
+          <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Move between Pokémon detail tabs</dd></div>
+        </dl>
+      </section>
+
+      <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <button type="button" data-mobile-view="roster"><span>⌁</span>DEX</button>
+        <button type="button" data-mobile-view="team"><span>◫</span>TEAM</button>
+        <button type="button" data-mobile-view="compare"><span>⇄</span>COMPARE</button>
+        <button type="button" data-mobile-search><span>⌕</span>SEARCH</button>
+        <button type="button" data-mobile-more><span>•••</span>MORE</button>
+      </nav>
+    </div>
+
+    <template id="cardTemplate">
+      <article class="pokemon-card">
+        <button class="card-hitbox" type="button" aria-label="Open details"></button>
+        <div class="card-head">
+          <span class="dex-number"></span>
+          <button class="watch-button" type="button" aria-label="Add to watchlist">◇</button>
+        </div>
+        <div class="sprite-wrap"><img alt="" loading="lazy" /></div>
+        <div class="card-body">
+          <div class="card-label"></div>
+          <h2></h2>
+          <div class="type-row"></div>
+        </div>
+        <span class="open-arrow">↗</span>
+      </article>
+    </template>
+
+    <script src="roster-data.js"></script>
+    <script src="mechanics-data.js"></script>
+    <script src="mega-data.js"></script>
+    <script src="knowledge-data.js"></script>
+    <script src="reference-move-data.js"></script>
+    <script src="ability-data.js"></script>
+    <script src="champions-calc.js"></script>
+    <script src="artwork-data.js"></script>
+    <script src="team-codes-lib.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

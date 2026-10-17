@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">Artwork unavailable</title>
+  <desc id="description">A neutral Poké Ball silhouette used only when form-specific artwork cannot load.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#132b3d"/><stop offset="1" stop-color="#07131d"/></linearGradient></defs>
+  <rect width="512" height="512" rx="64" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="146" fill="none" stroke="#668397" stroke-width="30" opacity=".65"/>
+  <path d="M110 256h292" stroke="#668397" stroke-width="30" opacity=".65"/>
+  <circle cx="256" cy="256" r="54" fill="#0c1d29" stroke="#9ab0be" stroke-width="24"/>
+  <path d="M216 404h80" stroke="#9ab0be" stroke-linecap="round" stroke-width="18" opacity=".7"/>
+</svg>
