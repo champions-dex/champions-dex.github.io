@@ -22,6 +22,7 @@ const TeamCodesLib = (() => {
     // Gender/form suffixes that the roster splits but sources often omit or spell differently.
     key = key.replace(/^(indeedee|basculegion|meowstic)-(f|m|female|male)$/, '$1');
     key = key.replace(/-(eternal|masterpiece|teatime)$/, '');
+    key = key.replace(/^eternal-(floette)$/, '$1'); // roster shows "Eternal Floette"; sources say Floette / Floette-Eternal
     key = key.replace(/-(f|m|female|male)$/, '');
     return key;
   }
@@ -129,7 +130,32 @@ const TeamCodesLib = (() => {
     return { valid: issues.length === 0, issues };
   }
 
-  return Object.freeze({ normalizeTeamCode, isValidTeamCode, formatTeamCode, slugify, speciesKey, itemKey, memberForSelection, selectionState, filterTeams, validateDataset, teamDate, isFullSetTeam });
+  // Plain-words age of the live feed ("List last refreshed 3 days ago") plus a stale flag after 48 hours.
+  const FEED_STALE_HOURS = 48;
+  function describeFeedAge(updatedAt, now = Date.now()) {
+    const time = updatedAt ? new Date(updatedAt).getTime() : NaN;
+    const nowMs = now instanceof Date ? now.getTime() : Number(now);
+    if (!Number.isFinite(time)) return { known: false, stale: true, ageHours: null, text: 'Refresh date unknown' };
+    const minutes = Math.max(0, Math.round((nowMs - time) / 60000));
+    const hours = minutes / 60;
+    const plural = (n, unit) => `${n} ${unit}${n === 1 ? '' : 's'} ago`;
+    let ago;
+    if (minutes < 2) ago = 'just now';
+    else if (minutes < 60) ago = plural(minutes, 'minute');
+    else if (hours < 48) ago = plural(Math.floor(hours), 'hour');
+    else ago = plural(Math.floor(hours / 24), 'day');
+    return { known: true, stale: hours > FEED_STALE_HOURS, ageHours: hours, text: `List last refreshed ${ago}` };
+  }
+
+  // Cache-busting query for the live feed: one value per 10-minute bucket, so CDN/browser caches can never
+  // serve an old list for long while repeated opens within the bucket still share one response.
+  function feedUrlWithCacheBust(url, now = Date.now()) {
+    const nowMs = now instanceof Date ? now.getTime() : Number(now);
+    const bucket = Math.floor(nowMs / 600000);
+    return `${url}${String(url).includes('?') ? '&' : '?'}t=${bucket}`;
+  }
+
+  return Object.freeze({ normalizeTeamCode, isValidTeamCode, formatTeamCode, slugify, speciesKey, itemKey, memberForSelection, selectionState, filterTeams, validateDataset, teamDate, isFullSetTeam, describeFeedAge, feedUrlWithCacheBust, FEED_STALE_HOURS });
 })();
 
 if (typeof module === 'object' && module.exports) module.exports = TeamCodesLib;

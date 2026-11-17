@@ -745,7 +745,7 @@ async function loadTeamCodes(force = false) {
   state.tc.loading = true;
   if (els.tcStatus) els.tcStatus.textContent = 'Loading the live team code list…';
   try {
-    const live = await tcFetchJson(TEAM_CODES_LIVE_URL, 6000);
+    const live = await tcFetchJson(TeamCodesLib.feedUrlWithCacheBust(TEAM_CODES_LIVE_URL), 8000);
     tcApplyDataset(live, 'live');
     try { localStorage.setItem('champions-tc-cache', JSON.stringify(live)); } catch { /* storage optional */ }
   } catch {
@@ -817,7 +817,13 @@ function renderTeamCodes() {
   const statusLabel = state.tc.source === 'live' ? 'Live list' : state.tc.source === 'cached' ? 'Showing saved copy (offline)' : state.tc.source === 'bundled' ? 'Showing bundled snapshot (offline)' : 'List unavailable offline';
   const updated = state.tc.updatedAt ? new Date(state.tc.updatedAt) : null;
   const updatedText = updated && !Number.isNaN(updated.getTime()) ? updated.toLocaleString('en-IN', { timeZone: 'Asia/Calcutta', dateStyle: 'medium', timeStyle: 'short' }) + ' IST' : 'date unavailable';
-  if (els.tcStatus) els.tcStatus.textContent = state.tc.teams.length ? `${statusLabel} · List updated ${updatedText} · ${state.tc.teams.length} teams` : 'No team code list is available yet. Connect once and refresh to save a copy.';
+  const age = TeamCodesLib.describeFeedAge(state.tc.updatedAt);
+  const staleChip = age.stale ? ` <span class="tc-stale-chip" title="The list has not been refreshed for more than ${TeamCodesLib.FEED_STALE_HOURS} hours, so newer teams may be missing.">⚠ STALE</span>` : '';
+  if (els.tcStatus) {
+    els.tcStatus.innerHTML = state.tc.teams.length
+      ? `${escapeHtml(statusLabel)} · <b>${escapeHtml(age.text)}</b>${staleChip} <span class="tc-updated-exact">(${escapeHtml(updatedText)})</span> · ${state.tc.teams.length} teams`
+      : 'No team code list is available yet. Connect once and refresh to save a copy.';
+  }
   // Selected Pokémon chips
   if (els.tcSelected) {
     els.tcSelected.innerHTML = state.tc.selected.map((selection, index) => {
@@ -2373,7 +2379,7 @@ async function renderMoveExplorer(query = state.moveExplorerQuery) {
 function renderDataCenter() {
   const counts = dataQualityCounts();
   if (els.dataHealth) els.dataHealth.innerHTML = `<article><b>${counts.specialist}</b><span>Complete move records</span><em>Champions move effects and technical fields bundled offline</em></article><article><b>${Object.keys(CHAMPIONS_REFERENCE_ABILITY_META || {}).length}</b><span>Complete Ability records</span><em>Every roster and Mega Ability has an effect description</em></article><article><b>${counts.unavailable}</b><span>Validation issues</span><em>${counts.issues.map(issue => escapeHtml(issue.message)).join(' · ') || 'No source-link conflicts detected'}</em></article><article><b>${state.watchlist.size}</b><span>Saved local entries</span><em>Watchlist, notes, and team draft stay on-device</em></article>`;
-  if (els.dataChangelog) els.dataChangelog.innerHTML = `<div class="changelog-entry"><b>v1.4.1</b><span>Team Codes now opens on full sets with published items first, with an “Only teams with published items” filter on by default, so species-only teams no longer greet you with “Item not published”.</span></div><div class="changelog-entry"><b>v1.4.0</b><span>Added the live Team Codes section: Replica Team codes fetched from the public data feed with a bundled offline snapshot, Pokémon + held-item (Mega Stone) filtering, tap-to-copy codes, favourites, worked-for-me feedback, and Open in Team Builder for full sets. Added in-app update awareness against the public version manifest.</span></div><div class="changelog-entry"><b>v1.3.0</b><span>Nova arena UI revamp: aurora glass design, type-glowing cards, roster sorting, recently viewed Pokémon, a visual damage HP bar, copyable comparison summaries, and keyboard-shortcut help.</span></div><div class="changelog-entry"><b>v1.2.15</b><span>Added a searchable Ability Explorer and replaced blank, vague, or placeholder move and Ability text with complete offline technical records. Details now flow through Pokémon pages, comparisons, Move Explorer, universal search, and the damage calculator.</span></div><div class="changelog-entry"><b>v1.2.14</b><span>Search now resets reliably between primary tabs; browser Back restores views and detail sheets; mobile navigation, compare prompts, move lookup, heatmap recovery, focus handling, and update reporting are hardened.</span></div><div class="changelog-entry"><b>v1.2.13</b><span>Rebuilt page, sidebar, detail-sheet, knowledge-sheet, comparison-tray, and mobile navigation scrolling with preserved positions and no overlay-obscured content.</span></div><div class="changelog-entry"><b>v1.2.0</b><span>Regulation M-C roster, six new Megas, battle-relevant alternate forms, version 1.2.0 move/Ability/item updates, professional comparison tray, accessibility fixes, and dedicated local artwork for all ${roster.length + megaRoster.length} entries.</span></div><div class="changelog-entry"><b>Offline</b><span>The app and APK bundle ${state.moveCatalog.size} complete move records and ${Object.keys(CHAMPIONS_REFERENCE_ABILITY_META || {}).length} complete Ability records.</span></div>`;
+  if (els.dataChangelog) els.dataChangelog.innerHTML = `<div class="changelog-entry"><b>v1.4.2</b><span>Team Codes now refreshes itself: the live list is collected automatically every 6 hours, the header says in plain words when it was last refreshed (with a STALE warning if it is older than 2 days), and the app always asks for the newest copy instead of a cached one.</span></div><div class="changelog-entry"><b>v1.4.1</b><span>Team Codes now opens on full sets with published items first, with an “Only teams with published items” filter on by default, so species-only teams no longer greet you with “Item not published”.</span></div><div class="changelog-entry"><b>v1.4.0</b><span>Added the live Team Codes section: Replica Team codes fetched from the public data feed with a bundled offline snapshot, Pokémon + held-item (Mega Stone) filtering, tap-to-copy codes, favourites, worked-for-me feedback, and Open in Team Builder for full sets. Added in-app update awareness against the public version manifest.</span></div><div class="changelog-entry"><b>v1.3.0</b><span>Nova arena UI revamp: aurora glass design, type-glowing cards, roster sorting, recently viewed Pokémon, a visual damage HP bar, copyable comparison summaries, and keyboard-shortcut help.</span></div><div class="changelog-entry"><b>v1.2.15</b><span>Added a searchable Ability Explorer and replaced blank, vague, or placeholder move and Ability text with complete offline technical records. Details now flow through Pokémon pages, comparisons, Move Explorer, universal search, and the damage calculator.</span></div><div class="changelog-entry"><b>v1.2.14</b><span>Search now resets reliably between primary tabs; browser Back restores views and detail sheets; mobile navigation, compare prompts, move lookup, heatmap recovery, focus handling, and update reporting are hardened.</span></div><div class="changelog-entry"><b>v1.2.13</b><span>Rebuilt page, sidebar, detail-sheet, knowledge-sheet, comparison-tray, and mobile navigation scrolling with preserved positions and no overlay-obscured content.</span></div><div class="changelog-entry"><b>v1.2.0</b><span>Regulation M-C roster, six new Megas, battle-relevant alternate forms, version 1.2.0 move/Ability/item updates, professional comparison tray, accessibility fixes, and dedicated local artwork for all ${roster.length + megaRoster.length} entries.</span></div><div class="changelog-entry"><b>Offline</b><span>The app and APK bundle ${state.moveCatalog.size} complete move records and ${Object.keys(CHAMPIONS_REFERENCE_ABILITY_META || {}).length} complete Ability records.</span></div>`;
 }
 
 function setView(view, options = {}) {
@@ -2928,12 +2934,16 @@ async function checkForAppUpdate(force = false) {
     const manifest = await tcFetchJson(APP_VERSION_MANIFEST_URL, 5000);
     if (!manifest || !manifest.latestVersion) throw new Error('No version manifest');
     const latest = String(manifest.latestVersion).replace(/^v/i, '');
-    if (status) status.textContent = isNewerVersion(latest, CHAMPIONS_APP_VERSION)
+    if (status) status.textContent = !window.ChampionsAndroid
+      ? `You are using the website (v${CHAMPIONS_APP_VERSION}), which always loads the newest version automatically.`
+      : isNewerVersion(latest, CHAMPIONS_APP_VERSION)
       ? `Update available: v${latest} (you have v${CHAMPIONS_APP_VERSION}). Open the release to download the new APK, then tap the file to install.`
       : `You are on the latest version (v${CHAMPIONS_APP_VERSION}). Web content also refreshes itself automatically when you are online.`;
     let dismissed = '';
     try { dismissed = localStorage.getItem('champions-update-dismissed') || ''; } catch { dismissed = ''; }
-    if (isNewerVersion(latest, CHAMPIONS_APP_VERSION) && dismissed !== latest) {
+    // The website always serves the newest build, so the APK banner only belongs inside the Android app.
+    const inAndroidApp = Boolean(window.ChampionsAndroid);
+    if (inAndroidApp && isNewerVersion(latest, CHAMPIONS_APP_VERSION) && dismissed !== latest) {
       const banner = document.querySelector('#updateBanner');
       const text = document.querySelector('#updateBannerText');
       const link = document.querySelector('#updateBannerLink');

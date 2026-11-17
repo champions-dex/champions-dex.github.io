@@ -1486,3 +1486,5 @@ select:focus, input:focus, textarea:focus { border-color: #0284c7 !important; bo
 .update-banner a { flex: 0 0 auto; padding: 8px 11px; border-radius: 10px; background: #f59e0b; color: #fff; text-decoration: none; font-size: 10.5px; letter-spacing: .6px; }
 .update-banner button { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(217,119,6,.45); background: #fff; color: #b45309; font-size: 17px; cursor: pointer; }
 .update-banner span { flex: 1; line-height: 1.5; }
+.tc-stale-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; font-size: 10px; font-weight: 800; letter-spacing: .6px; vertical-align: middle; }
+.tc-updated-exact { opacity: .7; font-size: .92em; }

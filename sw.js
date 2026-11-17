@@ -1,6 +1,6 @@
 importScripts('./artwork-data.js');
 
-const VERSION = 'champions-dex-pwa-v20';
+const VERSION = 'champions-dex-pwa-v21';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 const CORE_SHELL = [
@@ -53,15 +53,24 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Cache-busting `t` queries (live team-code feed) share one offline copy instead of piling up a new entry per bucket.
+function dataCacheKey(request) {
+  const url = new URL(request.url);
+  if (!url.searchParams.has('t')) return request;
+  url.searchParams.delete('t');
+  return url.toString();
+}
+
 async function networkFirst(request, fallback) {
   const cache = await caches.open(DATA_CACHE);
+  const key = dataCacheKey(request);
   try {
     const response = await fetch(request);
     if (!response.ok && response.type !== 'opaque') throw new Error(`HTTP ${response.status}`);
-    cache.put(request, response.clone());
+    cache.put(key, response.clone());
     return response;
   } catch {
-    return (await cache.match(request)) || (fallback ? await caches.match(fallback) : Response.error());
+    return (await cache.match(key)) || (fallback ? await caches.match(fallback) : Response.error());
   }
 }
 
